@@ -1,4 +1,6 @@
 # UnityUtils
+[日本語](README.ja.md)
+
 Various utilities for working with Unity
 
 This project currently contains extensions to the MonoBehaviour class to make programming in a functional style with coroutines easier. All methods take two arguments: the first, a Func<bool>, is a function that returns a bool value, the second is an Action that is executed when this function returns true.
