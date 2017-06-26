@@ -61,7 +61,7 @@ Method signature:
 Coroutine Whenever(Func<bool> expression, Action action, ExecutionStage stage = ExecutionStage.Update)
 ```
 
-The second argument Action will be executed very time the first argument expression changes from false to true. If the expression is already true, action is executed immediately.
+The second argument Action will be executed every time the first argument expression changes from false to true. If the expression is already true, action is executed immediately.
 
 ```csharp
 using JMP;
