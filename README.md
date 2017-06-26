@@ -5,6 +5,16 @@ This project currently contains extensions to the MonoBehaviour class to make pr
 
 ## While
 
+Method signature:
+
+```csharp
+Coroutine While(Func<bool> expression, Action action, ExecutionStage stage = ExecutionStage.Update)
+```
+
+The second argument Action will be execute at every frame where the first argument expression is true.
+
+Usage example:
+
 ```csharp
 using JMP;
 public class MyComponent : MonoBehaviour {
@@ -20,6 +30,14 @@ public class MyComponent : MonoBehaviour {
 ```
 
 ## When
+
+Method signature:
+
+```csharp
+Coroutine When(Func<bool> expression, Action action, ExecutionStage stage = ExecutionStage.Update)
+```
+
+The second argument Action will be executed once, when the first argument expression becomes true. If the expression is already true, action is executed immediately.
 
 ```csharp
 using JMP;
@@ -37,6 +55,14 @@ public class MyComponent : MonoBehaviour {
 
 ## Whenever
 
+Method signature:
+
+```csharp
+Coroutine Whenever(Func<bool> expression, Action action, ExecutionStage stage = ExecutionStage.Update)
+```
+
+The second argument Action will be executed very time the first argument expression changes from false to true. If the expression is already true, action is executed immediately.
+
 ```csharp
 using JMP;
 public class MyComponent : MonoBehaviour {
@@ -52,6 +78,14 @@ public class MyComponent : MonoBehaviour {
 ```
 
 ## Watch
+
+Method signature:
+
+```csharp
+Coroutine Watch<T>(Func<T> expression, Action<T> action, ExecutionStage stage = ExecutionStage.Update)
+```
+
+This method is slightly different from the other in that the first argument expression can return a value of any type. The second argument action is called at every frame where the value returned by the expression is different from that of the previous frame. Equality comparison is performed with System.Collections.Generic.EqualityComparer<T>.Default.Equals.
 
 ```csharp
 using JMP;
