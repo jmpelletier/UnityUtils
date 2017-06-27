@@ -1,42 +1,81 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace JMP {
 
-    public static class MonoBehaviourExtensions {
+    public enum ExecutionStage
+    {
+        Update,
+        LateUpdate,
+        FixedUpdate
+    }
 
-        protected enum ExecutionStage {
-            Update,
-            LateUpdate,
-            FixedUpdate
+    public class LazyLoad<T> where T:new()
+    {
+        private T val;
+        private Func<T> initializer = null;
+
+        public LazyLoad()
+        {
+            val = default(T);
         }
 
-        public static Coroutine While(this MonoBehaviour context, Func<bool> expression, Action action, ExecutionStage stage = Update) {
+        public LazyLoad(T val)
+        {
+            this.val = val;
+        }
+
+        public LazyLoad(Func<T> initializer)
+        {
+            this.initializer = initializer;
+        }
+
+        public static implicit operator T(LazyLoad<T> ll)
+        {
+            if (ll.val == null)
+            {
+                if (ll.initializer != null)
+                {
+                    ll.val = ll.initializer();
+                    ll.initializer = null;
+                } else
+                {
+                    ll.val = new T();
+                }
+            }
+            return ll.val;
+        }
+    }
+
+    public static class MonoBehaviourExtensions {
+
+        public static Coroutine While(this MonoBehaviour context, Func<bool> expression, Action action, ExecutionStage stage = ExecutionStage.Update) {
             return context.StartCoroutine(_while(expression, action, stage));
         }
 
-        public static Coroutine When(this MonoBehaviour context, Func<bool> expression, Action action, ExecutionStage stage = Update) {
+        public static Coroutine When(this MonoBehaviour context, Func<bool> expression, Action action, ExecutionStage stage = ExecutionStage.Update) {
             return context.StartCoroutine(_when(expression, action, stage));
         }
 
-        public static Coroutine Whenever(this MonoBehaviour context, Func<bool> expression, Action action, ExecutionStage stage = Update) {
+        public static Coroutine Whenever(this MonoBehaviour context, Func<bool> expression, Action action, ExecutionStage stage = ExecutionStage.Update) {
             return context.StartCoroutine(_whenever(expression, action, stage));
         }
 
-        public static Coroutine Watch<T>(this MonoBehaviour context, Func<T> expression, Action<T> action, ExecutionStage stage = Update) {
+        public static Coroutine Watch<T>(this MonoBehaviour context, Func<T> expression, Action<T> action, ExecutionStage stage = ExecutionStage.Update) {
             return context.StartCoroutine(_watch<T>(expression, action, stage));
         }
 
-        private static WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
-        private static WaitForFixedUpdate _waitForFixedUpdate = new WaitForFixedUpdate();
+        private static LazyLoad<WaitForEndOfFrame> _waitForEndOfFrame = new LazyLoad<WaitForEndOfFrame>();
+        private static LazyLoad<WaitForFixedUpdate> _waitForFixedUpdate = new LazyLoad<WaitForFixedUpdate>();
 
-        private static IEnumerator _getYieldStatement(ExecutionStage stage) {
+        private static YieldInstruction _getYieldStatement(ExecutionStage stage) {
             switch (stage)
             {
-                case LateUpdate: return _waitForFixedUpdate;
-                case FixedUpdate: return _waitForFixedUpdate;
-                case Update:
+                case ExecutionStage.LateUpdate: return _waitForEndOfFrame;
+                case ExecutionStage.FixedUpdate: return _waitForFixedUpdate;
+                case ExecutionStage.Update:
                 default:
                     return null;
             }
@@ -74,7 +113,7 @@ namespace JMP {
             T state = expression();
             action(state);
             while(true) {
-                bool newState = expression();
+                T newState = expression();
                 if (!EqualityComparer<T>.Default.Equals(state , newState)) {
                     state = newState;
                     action(state);
